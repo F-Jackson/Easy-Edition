@@ -6,7 +6,12 @@ from typing import List
 from google.colab import files
 
 
-def video_to_frames(video_path):
+def crop_image(frame, crop_area):
+    if crop_area:
+            x, y, w, h = crop_area  # Define as coordenadas e tamanho da área (x, y, largura, altura)
+            frame = frame[y:y+h, x:x+w]  # Faz o crop
+
+def video_to_frames(video_path, crop_area):
     frames = []
     # Abre o vídeo
     cap = cv2.VideoCapture(video_path)
@@ -23,6 +28,8 @@ def video_to_frames(video_path):
         ret, frame = cap.read()
         if not ret:
             break
+
+        crop_image(frame, crop_area)
 
         frames.append(frame)
         frame_count += 1
@@ -60,9 +67,15 @@ def order_frames(
 
 # Solicita o caminho do vídeo
 to_path = input("Video path: ").strip()
+crop_area = (
+    int(input("CropX: ").strip()),
+    int(input("CropY: ").strip()),
+    int(input("CropH: ").strip()),
+    int(input("CropW: ").strip())
+)
 
 # Processa o vídeo e ordena os frames
-all_frames = video_to_frames(to_path)
+all_frames = video_to_frames(to_path, crop_area)
 if all_frames:  # Verifica se frames foram extraídos
     str_frames = order_frames([all_frames], [(0, 10, 0)])
     print(f"Keys: {list(str_frames.keys())}")
