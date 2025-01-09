@@ -5,11 +5,11 @@ import numpy as np
 from typing import List
 from google.colab import files
 
-
 def crop_image(frame, crop_area):
     if crop_area:
-            x, y, w, h = crop_area  # Define as coordenadas e tamanho da área (x, y, largura, altura)
-            frame = frame[y:y+h, x:x+w]  # Faz o crop
+        x, y, w, h = crop_area  # Define as coordenadas e tamanho da área (x, y, largura, altura)
+        frame = frame[y:y+h, x:x+w]  # Faz o crop
+    return frame  # Retorna o frame cortado
 
 def video_to_frames(video_path, crop_area):
     frames = []
@@ -29,7 +29,7 @@ def video_to_frames(video_path, crop_area):
         if not ret:
             break
 
-        crop_image(frame, crop_area)
+        frame = crop_image(frame, crop_area)
 
         frames.append(frame)
         frame_count += 1
@@ -65,6 +65,18 @@ def order_frames(
     return with_strs
 
 
+def save_frames_as_webp(frames, output_dir: str):
+    # Cria o diretório de saída se não existir
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    # Salva cada frame como um arquivo WebP
+    for idx, frame in frames.items():
+        frame_path = os.path.join(output_dir, f"{idx}.webp")
+        cv2.imwrite(frame_path, frame)
+        print(f"Salvando {frame_path}")
+
+
 # Solicita o caminho do vídeo
 to_path = input("Video path: ").strip()
 crop_area = (
@@ -73,11 +85,12 @@ crop_area = (
     int(input("CropH: ").strip()),
     int(input("CropW: ").strip())
 )
+out_dir = input("Out path: ").strip()
 
 # Processa o vídeo e ordena os frames
 all_frames = video_to_frames(to_path, crop_area)
 if all_frames:  # Verifica se frames foram extraídos
     str_frames = order_frames([all_frames], [(0, 10, 0)])
-    print(f"Keys: {list(str_frames.keys())}")
+    save_frames_as_webp(str_frames, out_dir)
 else:
     print("Nenhum frame foi extraído.")
