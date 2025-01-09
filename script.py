@@ -5,11 +5,18 @@ import numpy as np
 from typing import List
 from google.colab import files
 
+
 def crop_image(frame, crop_area):
     if crop_area:
         x, y, w, h = crop_area  # Define as coordenadas e tamanho da área (x, y, largura, altura)
-        frame = frame[y:y+h, x:x+w]  # Faz o crop
-    return frame  # Retorna o frame cortado
+        
+        # Verifica se a área de corte é válida
+        if x + w <= frame.shape[1] and y + h <= frame.shape[0] and w > 0 and h > 0:
+            frame = frame[y:y+h, x:x+w]  # Faz o crop
+        else:
+            print(f"Área de corte inválida para o frame. Corte ignorado.")
+            return None  # Retorna None se a área de corte for inválida
+    return frame
 
 def video_to_frames(video_path, crop_area):
     frames = []
@@ -80,8 +87,8 @@ def save_frames_as_webp(frames, output_dir: str):
 # Solicita o caminho do vídeo
 to_path = input("Video path: ").strip()
 crop_area = (
-    int(input("CropX: ").strip()),
-    int(input("CropY: ").strip()),
+    0,
+    0,
     int(input("CropH: ").strip()),
     int(input("CropW: ").strip())
 )
