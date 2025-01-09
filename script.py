@@ -132,7 +132,12 @@ all_frames = []
 
 while getting:
   to_path = input("Video path: ").strip()
+  invert = input("Invert? (y/n): ").strip().lower() == "y"
   frames = video_to_frames(to_path, crop_area)
+
+  if invert:
+    frames = frames[::-1]
+
   all_frames.append(frames)
   getting = input("Get more? (y/n): ").strip().lower() == "y"
 
