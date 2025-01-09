@@ -66,7 +66,7 @@ def order_frames(
 ):
     with_strs = {}
     index = 0
-    can_cut = False
+    can_cut = 0
 
     for to_frame in to_frames:
         start, end, frames_idx = to_frame
@@ -80,10 +80,10 @@ def order_frames(
         frames = frames_list[frames_idx][start_percent:end_percent]
 
         for frame in frames:
-            if not can_cut:
-              can_cut = True
+            if can_cut == 0:
+              can_cut = 2
             elif cut_in_half:
-              can_cut = False
+              can_cut -= 1
               continue
 
             frame_path = f"frame_{index:04d}"
@@ -116,7 +116,7 @@ def save_frames_as_webp_with_compression(frames, output_dir: str):
         final_frame_path = os.path.join(output_dir, f"{idx}.webp")
 
         # Comprime a imagem usando cwebp (com qualidade adicional)
-        subprocess.run(['cwebp', temp_frame_path, '-q', '100', '-o', final_frame_path])
+        subprocess.run(['cwebp', temp_frame_path, '-q', '80', '-o', final_frame_path])
 
         # Remove o arquivo temporário
         os.remove(temp_frame_path)
@@ -149,7 +149,6 @@ while getting:
 
   all_frames.append(frames)
   getting = input("📥 Obter mais vídeos? (y/n): ").strip().lower() == "y"
-  print(f"###############{all_frames}##############")
 
 getting_to_frames = True
 to_frames = []
