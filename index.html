@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video to Frames</title>
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+</head>
+<body>
+    <h1>Extrair Frames de um Vídeo</h1>
+    <p>Carregue um vídeo para extrair os frames:</p>
+    <input type="file" id="video-input" accept="video/*">
+    <button onclick="processVideo()">Processar Vídeo</button>
+    <p id="status"></p>
+    <a id="download-link" style="display: none;">Baixar Frames (ZIP)</a>
+
+    <py-env>
+        - imageio[ffmpeg]
+        - pillow
+        - zipfile36
+    </py-env>
+
+    <py-script>
+from pathlib import Path
+import imageio.v3 as iio
+from PIL import Image
+import zipfile
+
+def video_to_frames(video_path, output_folder="frames"):
+    """Divide o vídeo em frames PNG e salva em uma pasta temporária"""
+    output_folder = Path(output_folder)
+    output_folder.mkdir(exist_ok=True)
+
+    # Abrindo o vídeo
+    reader = iio.imiter(video_path, plugin="pyav")
+
+    frame_count = 0
+    for frame in reader:
+        frame_image = Image.fromarray(frame)
+        frame_filename = output_folder / f"frame_{frame_count:04d}.png"
+        frame_image.save(frame_filename)
+        frame_count += 1
+
+    print(f"Total de frames extraídos: {frame_count}")
+    return output_folder
+
+def zip_frames(folder, zip_filename="frames.zip"):
+    """Cria um arquivo ZIP contendo os frames extraídos"""
+    with zipfile.ZipFile(zip_filename, "w", zipfile.ZIP_DEFLATED) as zipf:
+        for file in Path(folder).glob("*.png"):
+            zipf.write(file, arcname=file.name)
+    print(f"Arquivo {zip_filename} criado com sucesso!")
+    return zip_filename
+
+def process_video():
+    """Processa o vídeo carregado pelo usuário"""
+    video_input = Element("video-input").element
+    if not video_input.files:
+        Element("status").write("Por favor, carregue um vídeo.")
+        return
+
+    video_file = video_input.files[0]
+    video_path = f"/tmp/{video_file.name}"
+    
+    # Salvar o vídeo no diretório temporário
+    with open(video_path, "wb") as f:
+        f.write(video_file.arrayBuffer().to_py())
+
+    # Processar o vídeo
+    Element("status").write("Processando o vídeo...")
+    frames_folder = video_to_frames(video_path)
+    zip_filename = zip_frames(frames_folder)
+
+    # Criar o link para download
+    zip_path = Path(zip_filename)
+    with open(zip_path, "rb") as f:
+        blob = f.read()
+    url = window.URL.createObjectURL(js.Blob.new([blob], {"type": "application/zip"}))
+    download_link = Element("download-link")
+    download_link.element.href = url
+    download_link.element.download = zip_filename
+    download_link.element.style.display = "inline"
+    Element("status").write("Processamento concluído. Faça o download do ZIP.")
+    </py-script>
+</body>
+</html>
