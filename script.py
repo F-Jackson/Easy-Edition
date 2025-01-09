@@ -1,9 +1,10 @@
-import cv2
+!apt-get install webp
+
+
+import subprocess
 import os
-import zipfile
-import numpy as np
-from typing import List
-from google.colab import files
+from PIL import Image
+import cv2
 
 
 def crop_image(frame, crop_area):
@@ -72,16 +73,36 @@ def order_frames(
     return with_strs
 
 
-def save_frames_as_webp(frames, output_dir: str):
+def save_frames_as_webp_with_compression(frames, output_dir: str):
     # Cria o diretório de saída se não existir
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    # Salva cada frame como um arquivo WebP
+    # Salva cada frame como um arquivo WebP com Pillow e depois comprime com cwebp
     for idx, frame in frames.items():
-        frame_path = os.path.join(output_dir, f"{idx}.webp")
-        cv2.imwrite(frame_path, frame)
-        print(f"Salvando {frame_path}")
+        # Converte o frame de BGR (formato do OpenCV) para RGB (necessário para Pillow)
+        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        
+        # Cria uma imagem Pillow
+        pil_image = Image.fromarray(rgb_frame)
+
+        # Caminho para salvar o arquivo WebP temporário
+        temp_frame_path = os.path.join(output_dir, f"{idx}_temp.webp")
+
+        # Salva a imagem no formato WebP sem compressão
+        pil_image.save(temp_frame_path, format="WEBP", quality=80, optimize=True)
+        
+        # Caminho final para a imagem otimizada
+        final_frame_path = os.path.join(output_dir, f"{idx}.webp")
+
+        # Comprime a imagem usando cwebp (com qualidade adicional)
+        subprocess.run(['cwebp', temp_frame_path, '-q', '100', '-o', final_frame_path])
+
+        # Remove o arquivo temporário
+        os.remove(temp_frame_path)
+        
+        print(f"Salvando e comprimindo {final_frame_path}")
+
 
 
 # Solicita o caminho do vídeo
@@ -98,6 +119,6 @@ out_dir = input("Out path: ").strip()
 all_frames = video_to_frames(to_path, crop_area)
 if all_frames:  # Verifica se frames foram extraídos
     str_frames = order_frames([all_frames], [(0, 10, 0)])
-    save_frames_as_webp(str_frames, out_dir)
+    save_frames_as_webp_with_compression(str_frames, out_dir)
 else:
     print("Nenhum frame foi extraído.")
