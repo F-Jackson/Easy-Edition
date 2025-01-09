@@ -106,19 +106,36 @@ def save_frames_as_webp_with_compression(frames, output_dir: str):
 
 
 # Solicita o caminho do vídeo
-to_path = input("Video path: ").strip()
 crop_area = (
     0,
     0,
-    int(input("CropH: ").strip()),
-    int(input("CropW: ").strip())
+    int(input("CropW: ").strip()),
+    int(input("CropH: ").strip())
 )
 out_dir = input("Out path: ").strip()
 
 # Processa o vídeo e ordena os frames
-all_frames = video_to_frames(to_path, crop_area)
-if all_frames:  # Verifica se frames foram extraídos
-    str_frames = order_frames([all_frames], [(0, 10, 0)])
+getting = True
+all_frames = []
+
+while getting:
+  to_path = input("Video path: ").strip()
+  frames = video_to_frames(to_path, crop_area)
+  all_frames.append(frames)
+  getting = input("Get more? (y/n): ").strip().lower() == "y"
+
+getting_to_frames = True
+to_frames = []
+
+while getting_to_frames:
+  start = int(input("Start: ").strip())
+  end = int(input("End: ").strip())
+  frames_idx = int(input("Frames idx: ").strip())
+  to_frames.append((start, end, frames_idx))
+  getting_to_frames = input("Get more? (y/n): ").strip().lower() == "y"
+
+if len(all_frames) > 0:  # Verifica se frames foram extraídos
+    str_frames = order_frames(all_frames, to_frames)
     save_frames_as_webp_with_compression(str_frames, out_dir)
 else:
     print("Nenhum frame foi extraído.")
