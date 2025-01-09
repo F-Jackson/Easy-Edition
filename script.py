@@ -149,6 +149,7 @@ while getting:
 
   all_frames.append(frames)
   getting = input("📥 Obter mais vídeos? (y/n): ").strip().lower() == "y"
+  print(f"###############{all_frames}##############")
 
 getting_to_frames = True
 to_frames = []
@@ -159,6 +160,7 @@ while getting_to_frames:
   frames_idx = int(input("🔢 Índice dos frames: ").strip())
   to_frames.append((start, end, frames_idx))
   getting_to_frames = input("📥 Obter mais intervalos de frames? (y/n): ").strip().lower() == "y"
+  print(f"***************{to_frames}**************")
 
 if len(all_frames) > 0:  # Verifica se frames foram extraídos
     str_frames = order_frames(all_frames, to_frames, cut_in_half)
