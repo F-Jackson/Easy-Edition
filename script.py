@@ -61,10 +61,12 @@ def video_to_frames(video_path, crop_area):
 
 def order_frames(
     frames_list: list[list[any]],
-    to_frames: list[tuple[int, int, int]]
+    to_frames: list[tuple[int, int, int]],
+    cut_in_half: bool = False
 ):
     with_strs = {}
     index = 0
+    can_cut = False
 
     for to_frame in to_frames:
         start, end, frames_idx = to_frame
@@ -78,6 +80,12 @@ def order_frames(
         frames = frames_list[frames_idx][start_percent:end_percent]
 
         for frame in frames:
+            if not can_cut:
+              can_cut = True
+            elif cut_in_half:
+              can_cut = False
+              continue
+
             frame_path = f"frame_{index:04d}"
             with_strs[frame_path] = frame
             index += 1
@@ -121,44 +129,45 @@ def save_frames_as_webp_with_compression(frames, output_dir: str):
 crop_area = (
     0,
     0,
-    int(input("CropW: ").strip()),
-    int(input("CropH: ").strip())
+    int(input("🌾 CropW (largura da área de corte): ").strip()),
+    int(input("🌾 CropH (altura da área de corte): ").strip())
 )
-out_dir = input("Out path: ").strip()
+out_dir = input("📂 Caminho de saída: ").strip()
+cut_in_half = input("✂️ Cortar ao meio? (y/n): ").strip().lower() == "y"
 
 # Processa o vídeo e ordena os frames
 getting = True
 all_frames = []
 
 while getting:
-  to_path = input("Video path: ").strip()
-  invert = input("Invert? (y/n): ").strip().lower() == "y"
+  to_path = input("🎥 Caminho do vídeo: ").strip()
+  invert = input("🔄 Inverter a ordem? (y/n): ").strip().lower() == "y"
   frames = video_to_frames(to_path, crop_area)
 
   if invert:
     frames = frames[::-1]
 
   all_frames.append(frames)
-  getting = input("Get more? (y/n): ").strip().lower() == "y"
+  getting = input("📥 Obter mais vídeos? (y/n): ").strip().lower() == "y"
 
 getting_to_frames = True
 to_frames = []
 
 while getting_to_frames:
-  start = int(input("Start: ").strip())
-  end = int(input("End: ").strip())
-  frames_idx = int(input("Frames idx: ").strip())
+  start = int(input("⏳ Início do intervalo (em %): ").strip())
+  end = int(input("⏳ Fim do intervalo (em %): ").strip())
+  frames_idx = int(input("🔢 Índice dos frames: ").strip())
   to_frames.append((start, end, frames_idx))
-  getting_to_frames = input("Get more? (y/n): ").strip().lower() == "y"
+  getting_to_frames = input("📥 Obter mais intervalos de frames? (y/n): ").strip().lower() == "y"
 
 if len(all_frames) > 0:  # Verifica se frames foram extraídos
-    str_frames = order_frames(all_frames, to_frames)
+    str_frames = order_frames(all_frames, to_frames, cut_in_half)
     save_frames_as_webp_with_compression(str_frames, out_dir)
 
-    zip = input("Zip? (y/n): ").strip().lower()
+    zip = input("📦 Compactar em zip? (y/n): ").strip().lower()
     if zip == "y":
         zip_file(out_dir)
 
-    print("Frames salvos com sucesso!")
+    print("✅ Frames salvos com sucesso!")
 else:
-    print("Nenhum frame foi extraído.")
+    print("❌ Nenhum frame foi extraído.")
