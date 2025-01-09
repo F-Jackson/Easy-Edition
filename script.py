@@ -5,7 +5,19 @@ import subprocess
 import os
 from PIL import Image
 import cv2
+import zipfile
 
+def zip_file(output_dir):
+    # Cria o arquivo ZIP
+    zip_path = f"{output_dir}.zip"
+    
+    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for foldername, subfolders, filenames in os.walk(output_dir):
+            for filename in filenames:
+                file_path = os.path.join(foldername, filename)
+                zipf.write(file_path, os.path.relpath(file_path, output_dir))
+
+    print(f"Arquivos zipados em {zip_path}")
 
 def crop_image(frame, crop_area):
     if crop_area:
@@ -137,5 +149,11 @@ while getting_to_frames:
 if len(all_frames) > 0:  # Verifica se frames foram extraídos
     str_frames = order_frames(all_frames, to_frames)
     save_frames_as_webp_with_compression(str_frames, out_dir)
+
+    zip = input("Zip? (y/n): ").strip().lower()
+    if zip == "y":
+        zip_file(out_dir)
+
+    print("Frames salvos com sucesso!")
 else:
     print("Nenhum frame foi extraído.")
